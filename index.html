@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f5f7ff" />
+    <title>Search</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="search-shell">
+      <section class="search-card" aria-labelledby="search-title">
+        <div class="brand" aria-hidden="true"><span>S</span></div>
+        <h1 id="search-title">Search</h1>
+
+        <form id="search-form" role="search">
+          <label class="sr-only" for="query">Search query</label>
+          <div class="search-row">
+            <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M10.5 18a7.5 7.5 0 1 1 5.3-2.2l5.2 5.2-1.6 1.6-5.2-5.2A7.46 7.46 0 0 1 10.5 18Zm0-13.5a6 6 0 1 0 0 12 6 6 0 0 0 0-12Z" />
+            </svg>
+            <input
+              id="query"
+              name="q"
+              type="search"
+              placeholder="What are you looking for?"
+              autocomplete="off"
+              enterkeyhint="search"
+              autofocus
+            />
+          </div>
+
+          <div class="engine-field">
+            <label for="engine">Search engine</label>
+            <select id="engine" name="engine">
+              <option value="google">Google</option>
+              <option value="duckduckgo">DuckDuckGo</option>
+              <option value="bing">Bing</option>
+              <option value="brave">Brave</option>
+              <option value="ecosia">Ecosia</option>
+            </select>
+          </div>
+
+          <button type="submit">Search</button>
+        </form>
+      </section>
+    </main>
+    <script src="script.js"></script>
+  </body>
+</html>
