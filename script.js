@@ -43,13 +43,31 @@ const customNameInput = document.querySelector("#custom-name");
 const customUrlInput = document.querySelector("#custom-url");
 const addCustomButton = document.querySelector("#add-custom");
 const customList = document.querySelector("#custom-list");
+const engineList = document.querySelector("#engine-list");
+const historyList = document.querySelector("#history-list");
+const editHistoryButton = document.querySelector("#edit-history");
+const clearHistoryButton = document.querySelector("#clear-history");
 
 let customEngines = [];
+let disabledEngines = [];
+let searchHistory = [];
 try {
   customEngines = JSON.parse(localStorage.getItem("custom-search-engines") || "[]");
   if (!Array.isArray(customEngines)) customEngines = [];
 } catch {
   customEngines = [];
+}
+try {
+  disabledEngines = JSON.parse(localStorage.getItem("disabled-search-engines") || "[]");
+  if (!Array.isArray(disabledEngines)) disabledEngines = [];
+} catch {
+  disabledEngines = [];
+}
+try {
+  searchHistory = JSON.parse(localStorage.getItem("search-history") || "[]");
+  if (!Array.isArray(searchHistory)) searchHistory = [];
+} catch {
+  searchHistory = [];
 }
 
 const groups = [
@@ -61,17 +79,21 @@ const groups = [
   ["Developer", ["github", "npm", "pypi", "mdn", "steam"]],
 ];
 
-engineSelect.replaceChildren();
-for (const [label, ids] of groups) {
-  const group = document.createElement("optgroup");
-  group.label = label;
-  for (const id of ids) {
-    const option = document.createElement("option");
-    option.value = id;
-    option.textContent = engines[id].name;
-    group.append(option);
+function rebuildEngineOptions() {
+  engineSelect.replaceChildren();
+  for (const [label, ids] of groups) {
+    const visibleIds = ids.filter((id) => !disabledEngines.includes(id));
+    if (!visibleIds.length) continue;
+    const group = document.createElement("optgroup");
+    group.label = label;
+    for (const id of visibleIds) {
+      const option = document.createElement("option");
+      option.value = id;
+      option.textContent = engines[id].name;
+      group.append(option);
+    }
+    engineSelect.append(group);
   }
-  engineSelect.append(group);
 }
 
 function saveCustomEngines() {
@@ -79,8 +101,10 @@ function saveCustomEngines() {
 }
 
 function refreshCustomOptions() {
+  rebuildEngineOptions();
   engineSelect.querySelectorAll("optgroup[data-custom]").forEach((group) => group.remove());
   customList.replaceChildren();
+  engineList.replaceChildren();
 
   if (customEngines.length) {
     const group = document.createElement("optgroup");
@@ -121,8 +145,43 @@ function refreshCustomOptions() {
     engineSelect.append(group);
   }
 
+  for (const [label, ids] of groups) {
+    for (const id of ids) {
+      const row = document.createElement("div");
+      row.className = "engine-row";
+
+      const name = document.createElement("span");
+      name.className = "engine-name";
+      name.textContent = `${engines[id].name} · ${label}`;
+
+      const action = document.createElement("button");
+      action.type = "button";
+      action.className = "engine-action";
+      const isDisabled = disabledEngines.includes(id);
+      action.textContent = isDisabled ? "Restore" : "Delete";
+      action.setAttribute("aria-label", `${isDisabled ? "Restore" : "Delete"} ${engines[id].name}`);
+      action.addEventListener("click", () => {
+        if (disabledEngines.includes(id)) {
+          disabledEngines = disabledEngines.filter((item) => item !== id);
+        } else {
+          disabledEngines.push(id);
+          if (engineSelect.value === id) {
+            localStorage.setItem("preferred-search-engine", "google");
+          }
+        }
+        localStorage.setItem("disabled-search-engines", JSON.stringify(disabledEngines));
+        refreshCustomOptions();
+      });
+
+      row.append(name, action);
+      engineList.append(row);
+    }
+  }
+
   const storedEngine = localStorage.getItem("preferred-search-engine");
-  if (storedEngine && (engines[storedEngine] || customEngines.some((engine) => engine.id === storedEngine))) {
+  const storedIsAvailable = (engines[storedEngine] && !disabledEngines.includes(storedEngine))
+    || customEngines.some((engine) => engine.id === storedEngine);
+  if (storedEngine && storedIsAvailable) {
     engineSelect.value = storedEngine;
   } else {
     engineSelect.value = "google";
@@ -130,6 +189,78 @@ function refreshCustomOptions() {
 }
 
 refreshCustomOptions();
+
+let historyEditing = false;
+
+function saveSearchHistory() {
+  localStorage.setItem("search-history", JSON.stringify(searchHistory));
+}
+
+function renderSearchHistory() {
+  historyList.replaceChildren();
+  editHistoryButton.textContent = historyEditing ? "Done" : "Edit";
+  clearHistoryButton.hidden = searchHistory.length === 0;
+
+  if (!searchHistory.length) {
+    const empty = document.createElement("p");
+    empty.className = "history-empty";
+    empty.textContent = "No recent searches";
+    historyList.append(empty);
+    return;
+  }
+
+  for (const [index, item] of searchHistory.entries()) {
+    const row = document.createElement("div");
+    row.className = "history-row";
+
+    const queryButton = document.createElement("button");
+    queryButton.type = "button";
+    queryButton.className = "history-query";
+    queryButton.textContent = item;
+    queryButton.disabled = historyEditing;
+    queryButton.addEventListener("click", () => {
+      queryInput.value = item;
+      queryInput.focus();
+    });
+
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "remove-history";
+    remove.textContent = "×";
+    remove.hidden = !historyEditing;
+    remove.setAttribute("aria-label", `Remove ${item} from history`);
+    remove.addEventListener("click", () => {
+      searchHistory.splice(index, 1);
+      saveSearchHistory();
+      renderSearchHistory();
+    });
+
+    row.append(queryButton, remove);
+    historyList.append(row);
+  }
+}
+
+function addToHistory(query) {
+  const trimmed = query.trim();
+  if (!trimmed) return;
+  searchHistory = [trimmed, ...searchHistory.filter((item) => item !== trimmed)].slice(0, 100);
+  saveSearchHistory();
+  renderSearchHistory();
+}
+
+editHistoryButton.addEventListener("click", () => {
+  historyEditing = !historyEditing;
+  renderSearchHistory();
+});
+
+clearHistoryButton.addEventListener("click", () => {
+  searchHistory = [];
+  historyEditing = false;
+  saveSearchHistory();
+  renderSearchHistory();
+});
+
+renderSearchHistory();
 
 engineSelect.addEventListener("change", () => {
   localStorage.setItem("preferred-search-engine", engineSelect.value);
@@ -152,6 +283,7 @@ function search(query) {
   const destination = template
     .replaceAll("{query}", encodedQuery)
     .replaceAll("%s", encodedQuery);
+  addToHistory(trimmedQuery);
   window.location.assign(destination);
   return true;
 }
@@ -209,4 +341,10 @@ const urlQuery = new URLSearchParams(window.location.search).get("q");
 if (urlQuery && urlQuery.trim()) {
   queryInput.value = urlQuery;
   search(urlQuery);
+}
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(() => {});
+  });
 }

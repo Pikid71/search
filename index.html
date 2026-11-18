@@ -4,14 +4,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f5f7ff" />
-    <title>Search</title>
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Pi_Kid71's search" />
+    <title>Pi_Kid71's search</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="icon.svg" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <main class="search-shell">
       <section class="search-card" aria-labelledby="search-title">
-        <div class="brand" aria-hidden="true"><span>S</span></div>
-        <h1 id="search-title">Search</h1>
+        <div class="brand" aria-hidden="true"><span>PK</span></div>
+        <h1 id="search-title">Pi_Kid71's search</h1>
 
         <form id="search-form" role="search">
           <label class="sr-only" for="query">Search query</label>
@@ -43,7 +49,7 @@
           </div>
 
           <details class="custom-engines">
-            <summary>Custom search engines</summary>
+            <summary>Manage search engines</summary>
             <div class="custom-form">
               <label for="custom-name">Name</label>
               <input id="custom-name" type="text" placeholder="My search" maxlength="40" />
@@ -64,6 +70,16 @@
               </button>
             </div>
             <div id="custom-list" class="custom-list" aria-live="polite"></div>
+            <div id="engine-list" class="engine-list" aria-live="polite"></div>
+          </details>
+
+          <details class="history-panel" id="history-panel">
+            <summary>Search history</summary>
+            <div class="history-toolbar">
+              <button id="edit-history" type="button" class="text-button">Edit</button>
+              <button id="clear-history" type="button" class="text-button danger-text">Clear all</button>
+            </div>
+            <div id="history-list" class="history-list" aria-live="polite"></div>
           </details>
 
           <button type="submit">Search</button>

@@ -1,0 +1,18 @@
+{
+  "name": "Pi_Kid71's search",
+  "short_name": "Pi_Kid71",
+  "description": "Search with built-in or custom search engines.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f7ff",
+  "theme_color": "#596bd7",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
